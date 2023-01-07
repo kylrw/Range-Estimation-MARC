@@ -94,17 +94,12 @@ accuracy = accuracy * 100 / y_pred.shape[0]
 print("Accuracy = ", accuracy, "%")
 '''
 
-# Create plot
+# Create final plot
 plt.figure(figsize=(8,4))
 
-# Plot the predictions
+# Plot the values
 plt.plot(y_pred, label="Predictions")
+plt.plot(y_test, label="Actual values")
 
-# Plot the true values
-plt.plot(y_test, label="True values")
-
-# Add a legend
 plt.legend()
-
-# Show the plot
 plt.show()
