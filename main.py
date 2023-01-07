@@ -9,6 +9,7 @@ from keras.layers import Dense, LSTM
 import matplotlib.pyplot as plt
 plt.style.use('fivethirtyeight')
 
+# Sets random seed to try and combat randomness in output
 tf.random.set_seed(0)
 np.random.seed(0)
 
@@ -79,21 +80,21 @@ model.compile(
 
 # due to small variances probably in the initial weights and biases which are randomly generated the model sometimes jsut generates a straight horizontal line
 # this while loop will ensure that doesn't happen and tha the model is trained properly
-while True:
+#while True:
 
-  # Train the model
-  model.fit(
-    x_train, y_train,
-    epochs=epochs,
-    batch_size=batch_size,
-    validation_data=(x_train, y_train),
-  )
+# Train the model
+model.fit(
+  x_train, y_train,
+  epochs=epochs,
+  batch_size=batch_size,
+  validation_data=(x_train, y_train),
+)
 
-  # Predicts SOC data using the trained LSTM model
-  y_pred = model.predict(x_test)
+# Predicts SOC data using the trained LSTM model
+y_pred = model.predict(x_test)
 
-  if y_pred[0] != y_pred[training_data_len]: # model will be trained again if a flat line is generated
-    break
+  #if y_pred[0] != y_pred[training_data_len]: # model will be trained again if a flat line is generated
+  #  break
 
 ''' Tests accuracy for debugging, need to figure out proper algorithim
 accuracy = 0
