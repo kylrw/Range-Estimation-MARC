@@ -9,24 +9,25 @@ from keras.layers import Dense, LSTM
 import matplotlib.pyplot as plt
 plt.style.use('fivethirtyeight')
 
-# loads matlab files data into a python dict
+# Loads matlab files data into a python dict
 mat_data = loadmat('SOCprediction\TRAIN_LGHG2@n10degC_to_25degC_Norm_5Inputs.mat')
 
-# extracts the first 3 rows (Voltage, Current, Temp) and 100000 columns from the "X" key
+# Extracts the first 3 rows (Voltage, Current, Temp) and 100000 columns from the "X" key
 x_train = mat_data["X"][:3,:100000] 
-# extracts the first 100000 columns from the "Y" (SOC) key
+# Extracts the first 100000 columns from the "Y" (SOC) key
 y_train = mat_data["Y"][:1,:100000] 
 
 x_train = pandas.DataFrame(x_train)
 
-# flips columns and rows so data is proper shape, have the same # of input features
+# Flips columns and rows so data is proper shape, have the same # of input features
 x_train = x_train.T
 y_train = y_train.T
 
-#Convert the x_train and y_train to numpy arrays
+# Convert the x_train and y_train to numpy arrays
 x_train, y_train = np.array(x_train),np.array(y_train)
-#Reshape the data
-#x_train = np.reshape(x_train,(x_train.shape[0],x_train.shape[1],1))
+
+# Define NN Network Architecture
+# Using variables copied from MATLAB file
 
 num_responses = 1
 
@@ -34,6 +35,8 @@ num_features = 3
 
 num_hidden_units = 10
 
+# 100 worked just as well if not better than 1000, im not sure why
+# easier to debug so I left it at 100, but easily changeable
 epochs = 100 
 
 learn_rate_drop_period = 1000
@@ -42,10 +45,12 @@ initial_learn_rate = 0.01
 
 learn_rate_drop_factor = 0.1
 
+batch_size = 10000
+
 training_data_len = 80000
 
-#Build the LSTM model
-# Define the model
+# Build the LSTM model
+# Defined the model using same design as MATLAB file
 model = tf.keras.Sequential([
   tf.keras.layers.InputLayer(input_shape=(num_features,), dtype=tf.float32, name="input"),
   tf.keras.layers.BatchNormalization(center=True, scale=False, name="normalization"),
@@ -58,7 +63,7 @@ model = tf.keras.Sequential([
   tf.keras.layers.Dense(1, activation=None, name="output")
 ])
 
-# Compile the model
+# Compile the model, following MATLAB file again
 model.compile(
   optimizer=tf.keras.optimizers.Adam(learning_rate=initial_learn_rate),
   loss=tf.keras.losses.MeanSquaredError(),
@@ -69,16 +74,28 @@ model.compile(
 model.fit(
   x_train, y_train,
   epochs=epochs,
-  batch_size=10000,
+  batch_size=batch_size,
   validation_data=(x_train, y_train),
 )
 
-x_test = x_train[training_data_len:, :]
-y_test = y_train[training_data_len:, :]
+# Regathers data to test
+x_test = x_train#[training_data_len:]
+y_test = y_train#[training_data_len:]
 
+# Predicts SOC data using the trained LSTM model
 y_pred = model.predict(x_test)
 
-plt.figure(figsize=(16,8))
+''' Tests accuracy for debugging, need to figure out proper algorithim
+accuracy = 0
+for i in range(y_pred.shape[0]):
+  if y_pred[i] <= y_test[i]*0.01 or y_pred[i] >= y_test[i]*-0.01:
+    accuracy += 1
+accuracy = accuracy * 100 / y_pred.shape[0]
+print("Accuracy = ", accuracy, "%")
+'''
+
+# Create plot
+plt.figure(figsize=(8,4))
 
 # Plot the predictions
 plt.plot(y_pred, label="Predictions")
