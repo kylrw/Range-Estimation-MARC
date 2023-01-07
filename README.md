@@ -15,6 +15,6 @@ Notes:
 -To create the model, I just copied your general design from the MATLAB file.
 -The predictions aren't as accurate when the SOC has a negative slope.
 -The prediction is a bit different everytime I run it.
--Sometimes it will just be a horizontal line, if this happens I have a while loop so the model gets trained again
+-Sometimes it will just be a horizontal line, if this happens I just run the code again and it normally works
 -1000 epochs didn't seem to have much more of an effect compared to 100, I left it at 100 so its easier to debug but it can be easily changed
 
