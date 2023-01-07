@@ -29,10 +29,6 @@ y_train = y_train.T
 # Convert the x_train and y_train to numpy arrays
 x_train, y_train = np.array(x_train),np.array(y_train)
 
-# Regathers data that will be used to test model
-x_test = x_train#[training_data_len:]
-y_test = y_train#[training_data_len:]
-
 # Define NN Network Architecture
 # Using variables copied from MATLAB file
 
@@ -55,6 +51,10 @@ learn_rate_drop_factor = 0.1
 batch_size = 10000
 
 training_data_len = 80000
+
+# Regathers data that will be used to test model
+x_test = x_train#[training_data_len:]
+y_test = y_train#[training_data_len:]
 
 # Build the LSTM model
 # Defined the model using same design as MATLAB file
