@@ -9,6 +9,9 @@ from keras.layers import Dense, LSTM
 import matplotlib.pyplot as plt
 plt.style.use('fivethirtyeight')
 
+tf.random.set_seed(0)
+np.random.seed(0)
+
 # Loads matlab files data into a python dict
 mat_data = loadmat('SOCprediction\TRAIN_LGHG2@n10degC_to_25degC_Norm_5Inputs.mat')
 
@@ -25,6 +28,10 @@ y_train = y_train.T
 
 # Convert the x_train and y_train to numpy arrays
 x_train, y_train = np.array(x_train),np.array(y_train)
+
+# Regathers data that will be used to test model
+x_test = x_train#[training_data_len:]
+y_test = y_train#[training_data_len:]
 
 # Define NN Network Architecture
 # Using variables copied from MATLAB file
@@ -70,20 +77,23 @@ model.compile(
   metrics=[tf.keras.metrics.MeanAbsoluteError()]
 )
 
-# Train the model
-model.fit(
-  x_train, y_train,
-  epochs=epochs,
-  batch_size=batch_size,
-  validation_data=(x_train, y_train),
-)
+# due to small variances probably in the initial weights and biases which are randomly generated the model sometimes jsut generates a straight horizontal line
+# this while loop will ensure that doesn't happen and tha the model is trained properly
+while True:
 
-# Regathers data to test
-x_test = x_train#[training_data_len:]
-y_test = y_train#[training_data_len:]
+  # Train the model
+  model.fit(
+    x_train, y_train,
+    epochs=epochs,
+    batch_size=batch_size,
+    validation_data=(x_train, y_train),
+  )
 
-# Predicts SOC data using the trained LSTM model
-y_pred = model.predict(x_test)
+  # Predicts SOC data using the trained LSTM model
+  y_pred = model.predict(x_test)
+
+  if y_pred[0] != y_pred[training_data_len]: # model will be trained again if a flat line is generated
+    break
 
 ''' Tests accuracy for debugging, need to figure out proper algorithim
 accuracy = 0
