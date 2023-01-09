@@ -50,7 +50,7 @@ num_features = 3
 
 num_hidden_units = 10
 
-epochs = 10
+epochs = 1000
 
 learn_rate_drop_period = 1000
 
