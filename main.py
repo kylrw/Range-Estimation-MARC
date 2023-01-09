@@ -14,7 +14,7 @@ tf.random.set_seed(0)
 np.random.seed(0)
 
 # Loads matlab files data into a python dict
-mat_data = loadmat('SOCprediction\TRAIN_LGHG2@n10degC_to_25degC_Norm_5Inputs.mat')
+mat_data = loadmat('TRAIN_LGHG2@n10degC_to_25degC_Norm_5Inputs.mat')
 
 # Extracts the first 3 rows (Voltage, Current, Temp) and 100000 columns from the "X" key
 x_train = mat_data["X"][:3,:100000] 
@@ -30,6 +30,17 @@ y_train = y_train.T
 # Convert the x_train and y_train to numpy arrays
 x_train, y_train = np.array(x_train),np.array(y_train)
 
+# Reshape the data
+x_train = np.reshape(x_train,(x_train.shape[0],x_train.shape[1],1))
+
+# Regathers data that will be used to test model
+x_test = x_train
+y_test = y_train
+
+# Reshape the data
+x_test = np.reshape(x_test,(x_test.shape[0],x_test.shape[1],1))
+
+
 # Define NN Network Architecture
 # Using variables copied from MATLAB file
 
@@ -39,37 +50,32 @@ num_features = 3
 
 num_hidden_units = 10
 
-# 100 worked just as well if not better than 1000, im not sure why
-# easier to debug so I left it at 100, but easily changeable
-epochs = 100 
+epochs = 10
 
 learn_rate_drop_period = 1000
 
 initial_learn_rate = 0.01
 
-learn_rate_drop_factor = 0.1
+learn_rate_drop_factor = 0.01
 
 batch_size = 10000
 
 training_data_len = 80000
 
-# Regathers data that will be used to test model
-x_test = x_train#[training_data_len:]
-y_test = y_train#[training_data_len:]
+timesteps = 3
+
+data_dim = 1
 
 # Build the LSTM model
-# Defined the model using same design as MATLAB file
-model = tf.keras.Sequential([
-  tf.keras.layers.InputLayer(input_shape=(num_features,), dtype=tf.float32, name="input"),
-  tf.keras.layers.BatchNormalization(center=True, scale=False, name="normalization"),
-  tf.keras.layers.Dense(num_hidden_units, activation=None, name="fc1"),
-  tf.keras.layers.Activation("tanh", name="tanh"),
-  tf.keras.layers.Dense(num_hidden_units, activation=None, name="fc2"),
-  tf.keras.layers.LeakyReLU(alpha=0.3, name="leaky_relu"),
-  tf.keras.layers.Dense(num_responses, activation=None, name="fc3"),
-  tf.keras.layers.ReLU(max_value=1, name="clipped_relu"),
-  tf.keras.layers.Dense(1, activation=None, name="output")
-])
+# Defined the model using same design as the Abstract
+model = Sequential()
+model.add(tf.keras.layers.Input(shape=(timesteps, data_dim),name="input"))
+model.add(LSTM(num_hidden_units,name="LSTM"))
+model.add(Dense(num_hidden_units,name="FullyConnectedLayer"))
+model.add(tf.keras.layers.ReLU(max_value=1,name="ClippedRELU"))
+model.add(Dense(1,name="output"))
+
+#model.add(LSTM(num_hidden_units, batch_input_shape))
 
 # Compile the model, following MATLAB file again
 model.compile(
@@ -95,15 +101,6 @@ y_pred = model.predict(x_test)
 
   #if y_pred[0] != y_pred[training_data_len]: # model will be trained again if a flat line is generated
   #  break
-
-''' Tests accuracy for debugging, need to figure out proper algorithim
-accuracy = 0
-for i in range(y_pred.shape[0]):
-  if y_pred[i] <= y_test[i]*0.01 or y_pred[i] >= y_test[i]*-0.01:
-    accuracy += 1
-accuracy = accuracy * 100 / y_pred.shape[0]
-print("Accuracy = ", accuracy, "%")
-'''
 
 # Create final plot
 plt.figure(figsize=(8,4))
