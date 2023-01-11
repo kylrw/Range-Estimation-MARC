@@ -21,6 +21,7 @@ x_train = mat_data["X"][:3,:100000]
 # Extracts the first 100000 columns from the "Y" (SOC) key
 y_train = mat_data["Y"][:1,:100000] 
 
+# Converts dict to pandas array so it can be transposed properly
 x_train = pandas.DataFrame(x_train)
 
 # Flips columns and rows so data is proper shape, have the same # of input features
@@ -40,7 +41,6 @@ y_test = y_train
 # Reshape the data
 x_test = np.reshape(x_test,(x_test.shape[0],x_test.shape[1],1))
 
-
 # Define NN Network Architecture
 # Using variables copied from MATLAB file
 
@@ -50,7 +50,7 @@ num_features = 3
 
 num_hidden_units = 10
 
-epochs = 1000
+epochs = 100
 
 learn_rate_drop_period = 1000
 
@@ -75,18 +75,12 @@ model.add(Dense(num_hidden_units,name="FullyConnectedLayer"))
 model.add(tf.keras.layers.ReLU(max_value=1,name="ClippedRELU"))
 model.add(Dense(1,name="output"))
 
-#model.add(LSTM(num_hidden_units, batch_input_shape))
-
 # Compile the model, following MATLAB file again
 model.compile(
   optimizer=tf.keras.optimizers.Adam(learning_rate=initial_learn_rate),
   loss=tf.keras.losses.MeanSquaredError(),
-  metrics=[tf.keras.metrics.MeanAbsoluteError()]
+  metrics=[tf.keras.metrics.MeanSquaredError()]
 )
-
-# due to small variances probably in the initial weights and biases which are randomly generated the model sometimes jsut generates a straight horizontal line
-# this while loop will ensure that doesn't happen and tha the model is trained properly
-#while True:
 
 # Train the model
 model.fit(
@@ -99,8 +93,13 @@ model.fit(
 # Predicts SOC data using the trained LSTM model
 y_pred = model.predict(x_test)
 
-  #if y_pred[0] != y_pred[training_data_len]: # model will be trained again if a flat line is generated
-  #  break
+#Get the root mean squared error (RMSE)
+rmse_train=np.sqrt(np.mean(((y_pred - y_train)**2)))*100
+print(rmse_train)
+
+#Get the root mean squared error (RMSE)
+rmse_test=np.sqrt(np.mean(((y_pred- y_test)**2)))*100
+print(rmse_test)
 
 # Create final plot
 plt.figure(figsize=(8,4))
