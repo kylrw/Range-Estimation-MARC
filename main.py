@@ -16,29 +16,31 @@ np.random.seed(0)
 # Loads matlab files data into a python dict
 mat_data = loadmat('TRAIN_LGHG2@n10degC_to_25degC_Norm_5Inputs.mat')
 
+#Test data set
+test_data = loadmat('04_TEST_LGHG2@25degC_Norm_(05_Inputs).mat')
+
 # Extracts the first 3 rows (Voltage, Current, Temp) and 100000 columns from the "X" key
 x_train = mat_data["X"][:3,:100000] 
 # Extracts the first 100000 columns from the "Y" (SOC) key
 y_train = mat_data["Y"][:1,:100000] 
 
-# Converts dict to pandas array so it can be transposed properly
-x_train = pandas.DataFrame(x_train)
+#Create the x_test and y_test data sets
+x_test = test_data["X"][:3,:40000]
+y_test = test_data["Y"][:1,:40000]
+
 
 # Flips columns and rows so data is proper shape, have the same # of input features
 x_train = x_train.T
 y_train = y_train.T
+x_test = x_test.T
+y_test = y_test.T
 
 # Convert the x_train and y_train to numpy arrays
 x_train, y_train = np.array(x_train),np.array(y_train)
+x_test, y_test = np.array(x_test),np.array(y_test)
 
 # Reshape the data
 x_train = np.reshape(x_train,(x_train.shape[0],x_train.shape[1],1))
-
-# Regathers data that will be used to test model
-x_test = x_train
-y_test = y_train
-
-# Reshape the data
 x_test = np.reshape(x_test,(x_test.shape[0],x_test.shape[1],1))
 
 # Define NN Network Architecture
@@ -91,22 +93,25 @@ model.fit(
 )
 
 # Predicts SOC data using the trained LSTM model
-y_pred = model.predict(x_test)
+#make predictions Stateful = True
+trainPredict = model.predict(x_train, batch_size=batch_size)
+# model.reset_states()
+testPredict = model.predict(x_test, batch_size=batch_size)
+# model.reset_states()
 
 #Get the root mean squared error (RMSE)
-rmse_train=np.sqrt(np.mean(((y_pred - y_train)**2)))*100
+rmse_train=np.sqrt(np.mean(((trainPredict- y_train)**2)))*100
 print(rmse_train)
 
 #Get the root mean squared error (RMSE)
-rmse_test=np.sqrt(np.mean(((y_pred- y_test)**2)))*100
+rmse_test=np.sqrt(np.mean(((testPredict- y_test)**2)))*100
 print(rmse_test)
 
-# Create final plot
-plt.figure(figsize=(8,4))
-
-# Plot the values
-plt.plot(y_pred, label="Predictions")
-plt.plot(y_test, label="Actual values")
-
+# Plot the predictions
+plt.plot(testPredict, label="Predictions")
+# Plot the true values
+plt.plot(y_test, label="Objective")
+# Add a legend
 plt.legend()
+# Show the plot
 plt.show()
