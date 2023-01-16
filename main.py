@@ -90,11 +90,11 @@ testPredict = model.predict(x_test, batch_size=batch_size)
 
 #Get the root mean squared error (RMSE)
 rmse_train=np.sqrt(np.mean(((trainPredict- y_train)**2)))*100
-print(rmse_train)
+print("training data rmse", rmse_train)
 
 #Get the root mean squared error (RMSE)
 rmse_test=np.sqrt(np.mean(((testPredict- y_test)**2)))*100
-print(rmse_test)
+print("test data rmse", rmse_test)
 
 # Plot the predictions
 plt.plot(testPredict, label="Predictions")
