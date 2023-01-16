@@ -20,12 +20,12 @@ mat_data = loadmat('TRAIN_LGHG2@n10degC_to_25degC_Norm_5Inputs.mat')
 test_data = loadmat('04_TEST_LGHG2@25degC_Norm_(05_Inputs).mat')
 
 # Extracts the first 3 rows (Voltage, Current, Temp) and 100000 columns from the "X" key
-x_train = mat_data["X"][:5,:600000] 
+x_train = mat_data["X"][:3,:600000] 
 # Extracts the first 100000 columns from the "Y" (SOC) key
 y_train = mat_data["Y"][:1,:600000] 
 
 #Create the x_test and y_test data sets
-x_test = test_data["X"][:5,:40000]
+x_test = test_data["X"][:3,:40000]
 y_test = test_data["Y"][:1,:40000]
 
 
