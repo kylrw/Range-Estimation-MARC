@@ -39,9 +39,10 @@ y_test = y_test.T
 x_train, y_train = np.array(x_train),np.array(y_train)
 x_test, y_test = np.array(x_test),np.array(y_test)
 
-# Reshape the data
-x_train = np.reshape(x_train,(x_train.shape[0],x_train.shape[1],1))
-x_test = np.reshape(x_test,(x_test.shape[0],x_test.shape[1],1))
+x_train = np.reshape(x_train, (600000,1,3))
+y_train = np.reshape(y_train, (600000,1,1))
+x_test = np.reshape(x_test, (40000,1,3))
+y_test = np.reshape(y_test, (40000,1,1))
 
 # Define NN Network Architecture
 # Using variables copied from MATLAB file
@@ -49,7 +50,7 @@ x_test = np.reshape(x_test,(x_test.shape[0],x_test.shape[1],1))
 num_responses = 1
 num_features = 3
 num_hidden_units = 10
-epochs = 100
+epochs = 1000
 batch_size = x_test.shape[0]
 learn_rate_drop_period = 2000
 LearningRate = 0.01
@@ -58,10 +59,10 @@ learn_rate_drop_factor = 0.5
 # Build the LSTM model
 # Defined the model using same design as the Abstract
 model = Sequential()
-model.add(LSTM(10, batch_input_shape=(batch_size, x_train.shape[1],1), stateful=True,return_sequences=False))
-model.add(Dense(10))
-model.add(tf.keras.layers.ReLU(max_value=1))
+#model.add(LSTM(10, batch_input_shape=(batch_size,1,x_train.shape[1]), stateful=True,return_sequences=False))
+model.add(LSTM(10, input_shape=(1,3),return_sequences=False))
 model.add(Dense(1))
+model.add(tf.keras.layers.ReLU(max_value=1))
 model.summary()
 
 #Define the learning rate scheduler
@@ -78,7 +79,7 @@ lr_scheduler = tf.keras.callbacks.LearningRateScheduler(scheduler)
 model.compile(optimizer=tf.keras.optimizers.Adam(learning_rate=LearningRate), loss='mean_squared_error')
 
 #Train the model
-model.fit(x_train,y_train, batch_size=batch_size, epochs=epochs, callbacks=[lr_scheduler],validation_data=(x_test, y_test),)
+model.fit(x_train,y_train, batch_size=batch_size, epochs=epochs, callbacks=[lr_scheduler],validation_data=(x_test, y_test))
 # added validation data
 
 # Predicts SOC data using the trained LSTM model
