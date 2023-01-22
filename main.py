@@ -1,6 +1,7 @@
 #Import Libraries
 import math
 import numpy as np
+from numpy import array, hstack
 import pandas
 from scipy.io import loadmat
 import tensorflow as tf
@@ -9,58 +10,86 @@ from keras.layers import Dense, LSTM
 import matplotlib.pyplot as plt
 plt.style.use('fivethirtyeight')
 
-# Sets random seed to try and combat randomness in output
-tf.random.set_seed(0)
-np.random.seed(0)
-
 # Loads matlab files data into a python dict
 mat_data = loadmat('TRAIN_LGHG2@n10degC_to_25degC_Norm_5Inputs.mat')
 
 #Test data set
-test_data = loadmat('04_TEST_LGHG2@25degC_Norm_(05_Inputs).mat')
-
-# Extracts the first 3 rows (Voltage, Current, Temp) and 100000 columns from the "X" key
-x_train = mat_data["X"][:3,:600000] 
-# Extracts the first 100000 columns from the "Y" (SOC) key
-y_train = mat_data["Y"][:1,:600000] 
-
-#Create the x_test and y_test data sets
-x_test = test_data["X"][:3,:40000]
-y_test = test_data["Y"][:1,:40000]
+mat_data_2 = loadmat('04_TEST_LGHG2@25degC_Norm_(05_Inputs).mat')
 
 
-# Flips columns and rows so data is proper shape, have the same # of input features
-x_train = x_train.T
-y_train = y_train.T
-x_test = x_test.T
-y_test = y_test.T
+# split a multivariate sequence into samples
+def split_sequences(sequences, n_steps):
+    X, Y = list(), list()
+    for i in range(len(sequences)):
+        # find the end of this pattern
+        current_end = i + n_steps
+        # check if we are beyond the dataset
+        if current_end > len(sequences):
+            break
+        # gather input and output parts of the pattern
+        seq_x, seq_y = sequences[i:current_end, :-1], sequences[current_end-1, -1]
+        X.append(seq_x)
+        Y.append(seq_y)
+    return array(X), array(Y)
 
-# Convert the x_train and y_train to numpy arrays
-x_train, y_train = np.array(x_train),np.array(y_train)
-x_test, y_test = np.array(x_test),np.array(y_test)
-
-x_train = np.reshape(x_train, (600000,1,3))
-y_train = np.reshape(y_train, (600000,1,1))
-x_test = np.reshape(x_test, (40000,1,3))
-y_test = np.reshape(y_test, (40000,1,1))
-
-# Define NN Network Architecture
+## Define NN Network Architecture
 # Using variables copied from MATLAB file
 
 num_responses = 1
 num_features = 3
 num_hidden_units = 10
 epochs = 1000
-batch_size = x_test.shape[0]
+batch_size = 100
 learn_rate_drop_period = 2000
 LearningRate = 0.01
 learn_rate_drop_factor = 0.5
+timesteps = 5
+n_features = 3
 
-# Build the LSTM model
+## prepare train data
+# slices matlab data into each element
+V = array(mat_data['X'][0,:100000])
+I = array(mat_data['X'][1,:100000])
+T = array(mat_data['X'][2,:100000])
+SOC = array(mat_data['Y'][0,:100000])
+
+# prepare individial elements for merge
+V = V.reshape(len(V),1)
+I = I.reshape(len(I),1)
+T = T.reshape(len(T),1)
+SOC = SOC.reshape(len(SOC),1)
+
+# merge elements into one dataset
+train_data = hstack((V,I,T,SOC))
+
+## prepare test data
+# slices matlab data into each element
+V = array(mat_data_2['X'][0,:40000])
+I = array(mat_data_2['X'][1,:40000])
+T = array(mat_data_2['X'][2,:40000])
+SOC = array(mat_data_2['Y'][0,:40000])
+
+# prepare individial elements for merge
+V = V.reshape(len(V),1)
+I = I.reshape(len(I),1)
+T = T.reshape(len(T),1)
+SOC = SOC.reshape(len(SOC),1)
+
+# merge elements into one dataset
+test_data = hstack((V,I,T,SOC))
+
+
+x_train, y_train = split_sequences(train_data, timesteps)
+print(x_train.shape, y_train.shape)
+
+x_test, y_test = split_sequences(test_data, timesteps)
+print(x_test.shape, y_test.shape)
+
+## Build the LSTM model
 # Defined the model using same design as the Abstract
 model = Sequential()
-#model.add(LSTM(10, batch_input_shape=(batch_size,1,x_train.shape[1]), stateful=True,return_sequences=False))
-model.add(LSTM(10, input_shape=(1,3),return_sequences=False))
+#model.add(LSTM(10, batch_input_shape=(0,x_train.shape[1],n_features), stateful=True,return_sequences=False))
+model.add(LSTM(10, activation='relu', input_shape=(timesteps, n_features)))
 model.add(Dense(1))
 model.add(tf.keras.layers.ReLU(max_value=1))
 model.summary()
@@ -79,22 +108,19 @@ lr_scheduler = tf.keras.callbacks.LearningRateScheduler(scheduler)
 model.compile(optimizer=tf.keras.optimizers.Adam(learning_rate=LearningRate), loss='mean_squared_error')
 
 #Train the model
-model.fit(x_train,y_train, batch_size=batch_size, epochs=epochs, callbacks=[lr_scheduler],validation_data=(x_test, y_test))
-# added validation data
+model.fit(x_train,y_train, epochs=epochs, callbacks=[lr_scheduler],validation_data=(x_test, y_test),)
 
-# Predicts SOC data using the trained LSTM model
-#make predictions Stateful = True
+## Predicts SOC data using the trained LSTM model
+# make predictions Stateful = True
 trainPredict = model.predict(x_train, batch_size=batch_size)
-# model.reset_states()
 testPredict = model.predict(x_test, batch_size=batch_size)
-# model.reset_states()
 
 #Get the root mean squared error (RMSE)
-rmse_train=np.sqrt(np.mean(((trainPredict- y_train)**2)))*100
+rmse_train=np.sqrt(np.mean(((trainPredict[:1000] - y_train[:1000])**2)))*100
 print("training data rmse", rmse_train)
 
 #Get the root mean squared error (RMSE)
-rmse_test=np.sqrt(np.mean(((testPredict- y_test)**2)))*100
+rmse_test=np.sqrt(np.mean(((testPredict[:1000] - y_test[:1000])**2)))*100
 print("test data rmse", rmse_test)
 
 # Plot the predictions
@@ -104,4 +130,5 @@ plt.plot(y_test, label="Objective")
 # Add a legend
 plt.legend()
 # Show the plot
+plt.savefig('prediction.png')
 #plt.show()
