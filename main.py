@@ -38,20 +38,20 @@ def split_sequences(sequences, n_steps):
 num_responses = 1
 num_features = 3
 num_hidden_units = 10
-epochs = 1000
+epochs = 10
 batch_size = 100
 learn_rate_drop_period = 2000
 LearningRate = 0.01
 learn_rate_drop_factor = 0.5
-timesteps = 5
+timesteps = 50
 n_features = 3
 
 ## prepare train data
 # slices matlab data into each element
-V = array(mat_data['X'][0,:100000])
-I = array(mat_data['X'][1,:100000])
-T = array(mat_data['X'][2,:100000])
-SOC = array(mat_data['Y'][0,:100000])
+V = array(mat_data['X'][0,:600000])
+I = array(mat_data['X'][1,:600000])
+T = array(mat_data['X'][2,:600000])
+SOC = array(mat_data['Y'][0,:600000])
 
 # prepare individial elements for merge
 V = V.reshape(len(V),1)
