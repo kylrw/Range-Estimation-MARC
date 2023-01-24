@@ -28,6 +28,10 @@ def split_sequences(sequences, n_steps):
             break
         # gather input and output parts of the pattern
         seq_x, seq_y = sequences[i:current_end, :-1], sequences[current_end-1, -1]
+        #seq_x = []
+        #seq_y = sequences[current_end-1, -1]
+        #for j in range(i, current_end, 1000):
+        #    seq_x.append(sequences[j,-1])
         X.append(seq_x)
         Y.append(seq_y)
     return array(X), array(Y)
@@ -38,12 +42,12 @@ def split_sequences(sequences, n_steps):
 num_responses = 1
 num_features = 3
 num_hidden_units = 10
-epochs = 10
+epochs = 2
 batch_size = 100
 learn_rate_drop_period = 2000
 LearningRate = 0.01
 learn_rate_drop_factor = 0.5
-timesteps = 50
+timesteps = 1000
 n_features = 3
 
 ## prepare train data
@@ -80,16 +84,14 @@ test_data = hstack((V,I,T,SOC))
 
 
 x_train, y_train = split_sequences(train_data, timesteps)
-print(x_train.shape, y_train.shape)
 
 x_test, y_test = split_sequences(test_data, timesteps)
-print(x_test.shape, y_test.shape)
 
 ## Build the LSTM model
 # Defined the model using same design as the Abstract
 model = Sequential()
 #model.add(LSTM(10, batch_input_shape=(0,x_train.shape[1],n_features), stateful=True,return_sequences=False))
-model.add(LSTM(10, activation='relu', input_shape=(timesteps, n_features)))
+model.add(LSTM(10, input_shape=(timesteps, n_features)))
 model.add(Dense(1))
 model.add(tf.keras.layers.ReLU(max_value=1))
 model.summary()
@@ -130,5 +132,5 @@ plt.plot(y_test, label="Objective")
 # Add a legend
 plt.legend()
 # Show the plot
-plt.savefig('prediction.png')
+plt.savefig('prediction2.png')
 #plt.show()
