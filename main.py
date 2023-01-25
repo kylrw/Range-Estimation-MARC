@@ -42,7 +42,7 @@ def split_sequences(sequences, n_steps):
 num_responses = 1
 num_features = 3
 num_hidden_units = 10
-epochs = 2
+epochs = 65
 batch_size = 100
 learn_rate_drop_period = 2000
 LearningRate = 0.01
@@ -132,5 +132,5 @@ plt.plot(y_test, label="Objective")
 # Add a legend
 plt.legend()
 # Show the plot
-plt.savefig('prediction2.png')
+plt.savefig('prediction3.png')
 #plt.show()
