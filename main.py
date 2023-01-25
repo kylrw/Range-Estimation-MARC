@@ -42,12 +42,12 @@ def split_sequences(sequences, n_steps):
 num_responses = 1
 num_features = 3
 num_hidden_units = 10
-epochs = 65
-batch_size = 100
+epochs = 20
+batch_size = 1000
 learn_rate_drop_period = 2000
 LearningRate = 0.01
 learn_rate_drop_factor = 0.5
-timesteps = 1000
+timesteps = 100
 n_features = 3
 
 ## prepare train data
