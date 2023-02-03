@@ -48,12 +48,16 @@ def split_sequences(sequences, n_steps):
     X, y = list(), list()
     for i in range(len(sequences)):
         # find the end of this pattern
-        end_ix = i + n_steps
+        current_end = i + n_steps
         # check if we are beyond the dataset
-        if end_ix > len(sequences):
+        if current_end > len(sequences):
             break
         # gather input and output parts of the pattern
-        seq_x, seq_y = sequences[i:end_ix, :-1], sequences[end_ix-1, -1]
+        seq_x, seq_y = sequences[i:current_end, :-1], sequences[current_end-1, -1]
+       # seq_x, seq_y = [],[]
+        #for j in range(i,current_end,1000):
+        #    seq_x.append([sequences[j,0],sequences[j,1],sequences[j,2]])
+        #seq_y = sequences[current_end-1, -1]
         X.append(seq_x)
         y.append(seq_y)
     return array(X), array(y)
@@ -74,37 +78,35 @@ SOC = SOC.reshape(len(SOC),1)
 # merge elements into one dataset
 train_data = hstack((V,I,T,SOC))
 
-## prepare test data
-# slices matlab data into each element
-V = array(mat_data_2['X'][0,:])
-I = array(mat_data_2['X'][1,:])
-T = array(mat_data_2['X'][2,:])
-SOC = array(mat_data_2['Y'][0,:])
 
-# prepare individial elements for merge
-V = V.reshape(len(V),1)
-I = I.reshape(len(I),1)
-T = T.reshape(len(T),1)
-SOC = SOC.reshape(len(SOC),1)
+#x_train, y_train = split_sequences(train_data, 10)
+#print(x_train.shape, y_train.shape)
 
-# merge elements into one dataset
-test_data = hstack((V,I,T,SOC))
+timesteps = 3
 
+x_train, y_train = split_sequences(train_data, timesteps)
 
-x_train, y_train = split_sequences(train_data, 10)
-print(x_train.shape, y_train.shape)
+#print(x_train[0],y_train[0])
 
-x_test, y_test = split_sequences(test_data, 10)
-print(x_test.shape, y_test.shape)
+#print('Predictors matrix shape: ' + str(create_lstm_data(test_data, 10)[0].shape))
+#print('Target array shape: ' + str(create_lstm_data(test_data, 10)[1].shape))
 
-# Convert the x_train and y_train to numpy arrays
-#train_data = np.array[train_data]
+# define model
+model = Sequential()
+model.add(LSTM(50, activation='relu', return_sequences=True, input_shape=(timesteps, 3)))
+model.add(LSTM(50, activation='relu'))
+model.add(Dense(1))
+model.compile(optimizer='adam', loss='mse')
 
+# fit model
+model.fit(x_train, y_train, epochs=200, verbose=0)
 
-
-#print('Predictors matrix shape: ' + str(create_lstm_data(data, 10)[0].shape))
-
+# demonstrate prediction
+x_input = array([[0.5, 0.2, 0.1], [0.5, 0.3, 0.2], [0.5, 0.4, 0.3]])
+x_input = x_input.reshape((1, timesteps, 3))
+yhat = model.predict(x_input, verbose=0)
+print(yhat)
 
 
-#print('Predictors matrix shape: ' + str(create_lstm_data(data.values, 10)[0].shape))
-#print('Target array shape: ' + str(create_lstm_data(data.values, 10)[1].shape))
+
+
