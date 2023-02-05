@@ -16,33 +16,6 @@ mat_data = loadmat('TRAIN_LGHG2@n10degC_to_25degC_Norm_5Inputs.mat')
 #Test data set
 mat_data_2 = loadmat('04_TEST_LGHG2@25degC_Norm_(05_Inputs).mat')
 
-
-
-#data = mat_data[['Voltage','Current','Temp','V_avg','I_avg']]
-
-def create_lstm_data(data, k):
-    '''
-    input: 
-        data - numpy matrix of shape (n, p+1)
-        k - the length of the sequence of previous frames required to predcit the next value Y
-
-    output:
-        x_data - the predictors numpy matrix of shape (n-k, k, p)
-        y_data - the target numpy matrix of shape (n-k, 1)
-    '''
-
-    x_data = np.zeros([data.shape[0]-k, k, data.shape[1]-1])
-    y_data = []
-
-    for i in range(data.shape[0]):
-        current_sequence = data[i-k: i, :-1]
-        current_target = data[i-1, -1]
-
-        x_data[i-k,:,:] = current_sequence.reshape(1,k,x_data.shape[2])
-        y_data.append(current_target)
-
-    return x_data, np.asarray(y_data)
-
 # split a multivariate sequence into samples
 def split_sequences(sequences, n_steps):
     X, y = list(), list()
@@ -90,22 +63,6 @@ x_train, y_train = split_sequences(train_data, timesteps)
 
 #print('Predictors matrix shape: ' + str(create_lstm_data(test_data, 10)[0].shape))
 #print('Target array shape: ' + str(create_lstm_data(test_data, 10)[1].shape))
-
-# define model
-model = Sequential()
-model.add(LSTM(50, activation='relu', return_sequences=True, input_shape=(timesteps, 3)))
-model.add(LSTM(50, activation='relu'))
-model.add(Dense(1))
-model.compile(optimizer='adam', loss='mse')
-
-# fit model
-model.fit(x_train, y_train, epochs=200, verbose=0)
-
-# demonstrate prediction
-x_input = array([[0.5, 0.2, 0.1], [0.5, 0.3, 0.2], [0.5, 0.4, 0.3]])
-x_input = x_input.reshape((1, timesteps, 3))
-yhat = model.predict(x_input, verbose=0)
-print(yhat)
 
 
 
