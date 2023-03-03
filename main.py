@@ -3,7 +3,6 @@ import math
 import numpy as np
 from numpy import array, hstack
 import pandas
-import sklearn
 from scipy.io import loadmat
 import tensorflow as tf
 from keras.models import Sequential, Model
