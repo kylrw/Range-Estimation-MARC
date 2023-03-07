@@ -7,7 +7,9 @@ from typing import List, Tuple
 import matplotlib.pyplot as plt
 import numpy as np
 import pickle
+from scipy.signal import savgol_filter
 
+# Define a PyTorch Dataset to load the input data
 class SOCDataset(Dataset):
     def __init__(self,data) -> None:
         self.data = pickle.load(open(data, 'rb'))
@@ -22,38 +24,46 @@ class SOCDataset(Dataset):
         x, y = self.data[idx]
         return [torch.tensor(z, dtype=torch.float32) for z in [x, y]]
 
+# Define a PyTorch model for predicting the output
 class SOCModel(nn.Module):
     def __init__(self):
         super().__init__()
         self.lstm = nn.LSTM(
-            input_size=3,
-            hidden_size=10,
-            num_layers=1,
-            batch_first=False,
+            input_size=3, # Number of features in the input
+            hidden_size=16, # Number of LSTM units
+            num_layers=1, # Number of LSTM layers
+            batch_first=False, #
         )
-        self.linear = nn.Linear(10, 1)
+        # Use a linear layer to transform the LSTM output into a single scalar prediction
+        self.linear = nn.Linear(16, 1)
+
 
     def forward(self, x):
+        # Pass the input through the LSTM
         x, _ = self.lstm(x)
+        # Apply the linear layer to the LSTM output
         x = self.linear(x)
+        # Apply a sigmoid activation function to the output to ensure that it is between 0 and 1
         x = torch.clamp(x, 0, 1)
         return x
 
+# Define a function to smooth the model's predictions using Savitzky-Golay Filter
 def smooth_predictions(predictions, window_size):
-    # Apply a moving average filter to the predictions over a sliding window of size window_size
-    window = np.ones(window_size) / window_size
-    smoothed_predictions = np.convolve(predictions, window, mode='same')
-    return smoothed_predictions
+    np.random.seed(1)
+    # Create a Savitzky-Golay filter
+    filter = savgol_filter(predictions, window_size, 3)
+    return filter
 
-
+# Define a function to plot the model's predictions
 def train():
     model = SOCModel()
     optimizer = torch.optim.Adam(model.parameters(), lr=1e-2, weight_decay=1e-5)
-    scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=10, gamma=0.1)
+    scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=50, gamma=0.1)
     criterion = nn.MSELoss()
 
     dataset = SOCDataset('data.pkl')
     train_dataset, val_dataset = torch.utils.data.random_split(dataset, [int(len(dataset)*0.8), len(dataset) - int(len(dataset)*0.8)])
+    # Create DataLoaders to load batches of input-output pairs during training and validation
     train_dataloader = DataLoader(train_dataset, batch_size=1, shuffle=True)
     val_dataloader = DataLoader(val_dataset, batch_size=1, shuffle=True)
 
@@ -61,7 +71,7 @@ def train():
     best_model_state_dict = None
     early_stopping_counter = 0
 
-    for epoch in range(100):
+    for epoch in range(200):
         losses = []
         model.train()
         for x, y in tqdm(train_dataloader):
@@ -69,10 +79,12 @@ def train():
             y_hat = model(x)
             loss = criterion(y_hat, y)
             loss = torch.sqrt(loss)
+            # Backpropagate the error and update model weights
             loss.backward()
             losses.append(loss.item())
             optimizer.step()
         
+        # Update the learning rate scheduler to reduce learning rate
         scheduler.step() # reduce learning rate
 
         avg_train_loss = sum(losses) / len(losses)
@@ -88,16 +100,19 @@ def train():
 
         print(f'Epoch {epoch}: Train loss {avg_train_loss}, Validation loss {avg_val_loss}')
 
+        # If current validation loss is the best seen so far, save model state dict
         if avg_val_loss < best_val_loss:
             best_val_loss = avg_val_loss
             best_model_state_dict = model.state_dict()
             early_stopping_counter = 0
         else:
             early_stopping_counter += 1
+            # If validation loss did not improve for 10 epochs, stop early
             if early_stopping_counter >= 10:
                 print('Validation loss did not improve for 10 epochs. Stopping early.')
                 break
 
+    # Use the best model state dict to make predictions on a sample input
     x, y = dataset[0]
     model.load_state_dict(best_model_state_dict)
     model.eval()
@@ -106,11 +121,21 @@ def train():
     print(y[:100, 0])
     print(y_hat[0, :100, 0])
 
-    smooth_predictions(y_hat[0, :, 0].detach().numpy(), 10)
+    smooth_predictions(y_hat[0, :, 0].detach().numpy(), 1000)
 
     plt.plot(y[:, 0].detach().numpy())
     plt.plot(y_hat[0, :, 0].detach().numpy())
     plt.legend(['y', 'y_hat'])
     plt.show()
 
-train()
+    return model
+
+model = train()
+
+# Save the model in Models folder
+torch.save(model, 'Models/model.pt')
+
+
+
+
+
