@@ -28,24 +28,29 @@ class SOCDataset(Dataset):
 class SOCModel(nn.Module):
     def __init__(self):
         super().__init__()
-        self.lstm = nn.LSTM(
-            input_size=3, # Number of features in the input
-            hidden_size=16, # Number of LSTM units
-            num_layers=1, # Number of LSTM layers
-            batch_first=False, #
+        self.hidden_size = 16
+        self.num_layers = 1
+        self.lstm = nn.LSTM(3, 16, 1, batch_first=False)
+        self.ln = nn.LayerNorm(16)
+        self.fc2 = nn.Sequential(
+            nn.Dropout(0.2),
+            nn.Linear(16, 1),
         )
-        # Use a linear layer to transform the LSTM output into a single scalar prediction
-        self.linear = nn.Linear(16, 1)
 
 
     def forward(self, x):
+        out = x
         # Pass the input through the LSTM
-        x, _ = self.lstm(x)
+        out, _ = self.lstm(out)
+        # Apply a layer normalization to the LSTM output
+        out = self.ln(out)
+        # Apply a dropout layer to the LSTM output
+        out = self.fc2(out)
         # Apply the linear layer to the LSTM output
-        x = self.linear(x)
+        #out = self.linear(out)
         # Apply a sigmoid activation function to the output to ensure that it is between 0 and 1
-        x = torch.clamp(x, 0, 1)
-        return x
+        out = torch.clamp(out, 0, 1)
+        return out
 
 # Define a function to smooth the model's predictions using Savitzky-Golay Filter
 def smooth_predictions(predictions, window_size):
@@ -133,8 +138,7 @@ def train():
 model = train()
 
 # Save the model in Models folder
-torch.save(model, 'Models/model.pt')
-
+#torch.save(model, 'Models/model.pt')
 
 
 

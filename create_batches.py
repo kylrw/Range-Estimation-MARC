@@ -58,7 +58,13 @@ def main() -> None:
     #prints the number of chunks that start < 0.5
     print(len([chunk for chunk in chunks if chunk[1][0] < 0.5]))
     #prints the number of chunks that end > 0.75
-    print(len([chunk for chunk in chunks if chunk[1][-1] > 0.75]))
+    print(len([chunk for chunk in chunks if chunk[1][-1] > 0.5]))
+
+    #plots each chunk
+    for chunk in chunks:
+        plt.plot(chunk[1])
+        
+    plt.show()
 
 
     '''PADS THE CHUNKS TO THE LONGEST CHUNK
