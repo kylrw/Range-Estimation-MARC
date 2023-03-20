@@ -11,10 +11,10 @@ import matplotlib.pyplot as plt
 plt.style.use('fivethirtyeight')
 
 # Loads matlab files data into a python dict
-mat_data = loadmat('TRAIN_LGHG2@n10degC_to_25degC_Norm_5Inputs.mat')
+mat_data = loadmat('Data/TRAIN_LGHG2@n10degC_to_25degC_Norm_5Inputs.mat')
 
 #Test data set
-mat_data_2 = loadmat('04_TEST_LGHG2@25degC_Norm_(05_Inputs).mat')
+mat_data_2 = loadmat('Data/04_TEST_LGHG2@25degC_Norm_(05_Inputs).mat')
 
 
 # split a multivariate sequence into samples
@@ -121,8 +121,8 @@ testPredict = model.predict(x_test, batch_size=batch_size)
 #print("training data rmse", rmse_train)
 
 #Get the root mean squared error (RMSE)
-#rmse_test=np.sqrt(np.mean(((testPredict[:40000] - y_test[:40000])**2)))*100
-mse_test = sklearn.metrics.mean_squared_error(y_test,testPredict)
+
+mse_test = np.mean(((testPredict - y_test)**2))
 rmse_test = math.sqrt(mse_test)
 print("test data rmse", rmse_test)
 

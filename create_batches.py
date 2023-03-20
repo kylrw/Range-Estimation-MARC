@@ -35,6 +35,10 @@ def main() -> None:
     mat_files = list(Path("Data/1").glob("*.mat"))
 
     chunks = []
+
+    #loads each .mat file in descending order of the file name and adds the chunks to the chunks list
+    
+
     for mat_file in mat_files:
         mat_data = loadmat(mat_file)
         chunks.extend(get_chunks(mat_data["X"], mat_data["Y"]))
