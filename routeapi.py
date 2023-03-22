@@ -26,7 +26,7 @@ def calculate():
     source = request.form['source']
     dest = request.form['dest']
 
-        
+    # get the api key from the login_creds.py file
     api_key = os.getenv('api_key')
     gmaps = googlemaps.Client(key=api_key)
 
