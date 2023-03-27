@@ -25,8 +25,8 @@ with open('Data/phil_socdata_train.csv', 'w', newline='') as csvfile:
     # Loop through all the excel files
     for excel_file in excel_files:
 
-        # skip the excel file with name Phil_DC_86_10degC.xlsx as it will be used as test data
-        if excel_file == 'Phil_DC_86_10degC.xlsx':
+        # skip the excel file with name Phil_DC_93_10degC.xlsx as it will be used as test data
+        if excel_file == 'Phil_DC_93_10degC.xlsx':
             continue
 
         # Read the excel file into a pandas dataframe
