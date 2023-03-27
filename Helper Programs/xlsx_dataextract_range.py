@@ -112,12 +112,14 @@ def main():
                         writer.writerow(processed_chunk)
                         previous_row = processed_chunk
             
+            '''
             # gathers the data for the entire file
             processed_chunk = process_chunk(df)
             if not np.isnan(processed_chunk).any():
                 writer.writerow(processed_chunk)
                 #print status
                 print(excel_file, 'Done')
+            '''
                             
 if __name__ == '__main__':
     main()

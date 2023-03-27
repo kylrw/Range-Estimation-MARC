@@ -18,12 +18,17 @@ import csv
 # Get all the excel files in the current directory
 excel_files = [f for f in os.listdir('Data/philcar') if f.endswith('.xlsx')]
 
-with open('reformated3.csv', 'w', newline='') as csvfile:
+with open('Data/phil_socdata_train.csv', 'w', newline='') as csvfile:
     writer = csv.writer(csvfile, delimiter=',')
     writer.writerow(['SOC', 'V', 'I', 'T'])
 
     # Loop through all the excel files
     for excel_file in excel_files:
+
+        # skip the excel file with name Phil_DC_86_10degC.xlsx as it will be used as test data
+        if excel_file == 'Phil_DC_86_10degC.xlsx':
+            continue
+
         # Read the excel file into a pandas dataframe
         df = pd.read_excel("Data/philcar/"+excel_file, sheet_name=None)
 
