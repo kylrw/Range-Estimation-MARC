@@ -55,8 +55,4 @@ with open('reformated3.csv', 'w', newline='') as csvfile:
                 if soc[x] == soc[x] and v[x] == v[x] and i[x] == i[x] and t[x] == t[x]:
                     writer.writerow([soc[x], v[x], i[x], t[x]])
     
-        # Check if the csv file has 100000 rows
-        if len(open('reformated3.csv').readlines()) >= 200000:
-            print('Done!')
-            break
-            
+print('Done!')
