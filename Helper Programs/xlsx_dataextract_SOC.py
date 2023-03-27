@@ -1,5 +1,5 @@
 """
-This program will read all xlsx files, search all sheets for the columns;
+This program will read all xlsx files, search all sheets for the columns:
 
     - SOC
     - Voltage

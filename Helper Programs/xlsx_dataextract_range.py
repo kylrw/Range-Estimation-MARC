@@ -1,5 +1,5 @@
 """
-This program will go through every excel file in the folder Data/philcar it will parse the data as specified and write it to a csv file.
+This program will go through every excel file in the folder Data/philcar it will parse the data as specified and write it to a csv file
 
 Parsing Specifications:
 The program will gather the following information from the second sheet in each excel file:
