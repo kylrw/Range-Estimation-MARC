@@ -1,6 +1,9 @@
 from autogluon.tabular import TabularDataset, TabularPredictor
 import numpy as np
 import math
+import os
+
+print(os.getcwd())
 
 train_data = TabularDataset(f'Data/phil_socdata_train.csv')
 train_data.head()
@@ -8,7 +11,7 @@ train_data.head()
 label = 'SOC'
 train_data[label].describe()
 
-predictor = TabularPredictor(label=label,eval_metric='root_mean_squared_error').fit(train_data, presets='best_quality',time_limit = 60*60)
+predictor = TabularPredictor(label=label,eval_metric='root_mean_squared_error').fit(train_data, presets='best_quality',time_limit = 60*60*3)
 
 test_data = TabularDataset(f'Data/phil_socdata_test.csv')
 
