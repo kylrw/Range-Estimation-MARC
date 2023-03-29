@@ -2,6 +2,7 @@ from autogluon.tabular import TabularDataset, TabularPredictor
 import numpy as np
 import math
 import os
+import time
 
 print(os.getcwd())
 
@@ -11,7 +12,7 @@ train_data.head()
 label = 'SOC'
 train_data[label].describe()
 
-predictor = TabularPredictor(label=label,eval_metric='root_mean_squared_error').fit(train_data, presets='best_quality',time_limit = 60*60*3)
+predictor = TabularPredictor(label=label,eval_metric='root_mean_squared_error').fit(train_data, presets='best_quality',time_limit=15*60*60,ag_args_fit={'num_gpus':4})
 
 test_data = TabularDataset(f'Data/phil_socdata_test.csv')
 
@@ -30,3 +31,4 @@ plt.savefig("Pictures/soc_predictions.png")
 mse_test = np.mean(((y_pred - test_data[label])**2))
 rmse_test = math.sqrt(mse_test)
 print("test data rmse:", rmse_test)
+print(time.strftime("%I:%M:%S %p"))
