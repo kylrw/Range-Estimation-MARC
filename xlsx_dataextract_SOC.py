@@ -18,9 +18,9 @@ import csv
 # Get all the excel files in the current directory
 excel_files = [f for f in os.listdir('Data/philcar') if f.endswith('.xlsx')]
 
-with open('Data/phil_socdata_train.csv', 'w', newline='') as csvfile:
+with open('Data/phil_socdata_trainLSTM.csv', 'w', newline='') as csvfile:
     writer = csv.writer(csvfile, delimiter=',')
-    writer.writerow(['SOC', 'V', 'I', 'T'])
+    writer.writerow(['item_id','timestamp','SOC', 'V', 'I', 'T'])
 
     # Loop through all the excel files
     for excel_file in excel_files:
@@ -32,6 +32,7 @@ with open('Data/phil_socdata_train.csv', 'w', newline='') as csvfile:
         # Read the excel file into a pandas dataframe
         df = pd.read_excel("Data/philcar/"+excel_file, sheet_name=None)
 
+        time = []
         soc = []
         v = []
         i = []
@@ -53,11 +54,17 @@ with open('Data/phil_socdata_train.csv', 'w', newline='') as csvfile:
             continue
         else:
             print('Found all columns in file ' + excel_file)
-            
-            # iterate through the lists and write the data to the csv file
+
+            # iterate through the lists and write the data to the csv file, including the timestep of 1s using pandas 
             for x in range(len(soc)):
                 # double check that the data is not NaN
                 if soc[x] == soc[x] and v[x] == v[x] and i[x] == i[x] and t[x] == t[x]:
-                    writer.writerow([soc[x], v[x], i[x], t[x]])
+                    timestep = x
+                    #converts timestep into a pandas timestamp
+                    timestep = pd.to_datetime(timestep, unit='s')
+                    #converts the timestamp into a string
+                    timestep = timestep.strftime('%Y-%m-%d %H:%M:%S')
+                    #writes the data to the csv file
+                    writer.writerow(['SOC',timestep, soc[x], v[x], i[x], t[x]])
     
 print('Done!')

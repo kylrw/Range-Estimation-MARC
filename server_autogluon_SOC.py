@@ -1,60 +1,54 @@
 from autogluon.tabular import TabularDataset, TabularPredictor
-import autogluon.core as ag
 import numpy as np
 import math
+import matplotlib.pyplot as plt
 
-train_data = TabularDataset(f'Data/phil_socdata_train.csv')
+# Import and preview training data
+train_data = TabularDataset('Data/phil_socdata_train.csv')
 train_data.head()
-
 label = 'SOC'
-train_data[label].describe()
 
-nn_options = {  # specifies non-default hyperparameter values for neural network models
-    'num_epochs': 1000,  # number of training epochs (controls training time of NN models)
-    'learning_rate': ag.space.Real(1e-4, 1e-2, default=5e-4, log=True),  # learning rate used in training (real-valued hyperparameter searched on log-scale)
-    'activation': ag.space.Categorical('relu', 'softrelu', 'tanh'),  # activation function used in NN (categorical hyperparameter, default = first entry)
-    'dropout_prob': ag.space.Real(0.0, 0.5, default=0.1),  # dropout probability (real-valued hyperparameter)
-}
-
-gbm_options = {  # specifies non-default hyperparameter values for lightGBM gradient boosted trees
-    'num_boost_round': 100,  # number of boosting rounds (controls training time of GBM models)
-    'num_leaves': ag.space.Int(lower=26, upper=66, default=36),  # number of leaves in trees (integer hyperparameter)
-}
-
-hyperparameters = {  # hyperparameters of each model type
-                   'GBM': gbm_options,
-                   'NN_TORCH': nn_options,  # NOTE: comment this line out if you get errors on Mac OSX
-                  }  # When these keys are missing from hyperparameters dict, no models of that type are trained
-
-time_limit = 24*60*60  # train various models for ~10 min
-num_trials = 50  # try at most 5 different hyperparameter configurations for each type of model
-search_strategy = 'auto'  # to tune hyperparameters using random search routine with a local scheduler
-
-hyperparameter_tune_kwargs = {  # HPO is not performed unless hyperparameter_tune_kwargs is specified
-    'num_trials': num_trials,
-    'scheduler' : 'local',
-    'searcher': search_strategy,
-}
-
+# Model training with AutoGluon
 predictor = TabularPredictor(label=label).fit(
-    train_data, time_limit=time_limit, auto_stack=True, presets='best_quality',
-    hyperparameters=hyperparameters, hyperparameter_tune_kwargs=hyperparameter_tune_kwargs,
+    train_data,
+    presets='best_quality',
+    auto_stack=True,
+    ag_args_fit={'num_gpus': 1}
 )
 
+# Import and preview test data
 test_data = TabularDataset(f'Data/phil_socdata_test.csv')
 
+# Make predictions and evaluate the model
 y_pred = predictor.predict(test_data.drop(columns=[label]))
-y_pred.head()
-
 predictor.evaluate(test_data, silent=True)
+predictor.leaderboard(test_data, silent=True)
 
-#plots the predicted vs actual values of the top performing model using matplotlib
-import matplotlib.pyplot as plt
+# Plot the predicted vs actual values
 plt.plot(y_pred, label="Predictions")
 plt.plot(test_data[label], label="True Values")
 plt.legend()
-plt.savefig("Pictures/soc_predictions.png")
+plt.savefig("Pictures/predictions2.png")
 
+# Smooth the predicted values using a moving average of 600 values and plot them against the actual values
+y_pred_smooth = y_pred.rolling(600).mean()
+plt.plot(y_pred_smooth, label="Predictions")
+plt.plot(test_data[label], label="True Values")
+plt.legend()
+plt.savefig("Pictures/smoothed_predictions.png")
+
+# Calculate the RMSE for both the original and smoothed predictions
 mse_test = np.mean(((y_pred - test_data[label])**2))
 rmse_test = math.sqrt(mse_test)
-print("test data rmse:", rmse_test)
+print("test data rmse", rmse_test)
+
+mse_test_smooth = np.mean(((y_pred_smooth - test_data[label])**2))
+rmse_test_smooth = math.sqrt(mse_test_smooth)
+print("test data rmse (smooth)", rmse_test_smooth)
+
+# Calculate the accuracy of the original and smoothed predictions
+accuracy = sum(abs(y_pred - test_data[label]) < 0.1) / len(y_pred)
+accuracy_smooth = sum(abs(y_pred_smooth - test_data[label]) < 0.1) / len(y_pred_smooth)
+
+print("accuracy", accuracy)
+print("accuracy_smooth", accuracy_smooth)
