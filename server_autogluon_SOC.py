@@ -11,44 +11,35 @@ label = 'SOC'
 # Model training with AutoGluon
 predictor = TabularPredictor(label=label).fit(
     train_data,
+    #time_limit = 10*60,
     presets='best_quality',
-    auto_stack=True,
-    ag_args_fit={'num_gpus': 1}
+    verbosity=2
 )
 
-# Import and preview test data
-test_data = TabularDataset(f'Data/phil_socdata_test.csv')
+# import test data from Data/phil_socdata_test.csv, normalize (between 0 and 1) and standardize
+test_data1 = TabularDataset(f'Data/phil_socdata_test1.csv')
+test_data2 = TabularDataset(f'Data/phil_socdata_test2.csv')
 
-# Make predictions and evaluate the model
-y_pred = predictor.predict(test_data.drop(columns=[label]))
-predictor.evaluate(test_data, silent=True)
-predictor.leaderboard(test_data, silent=True)
+y_pred1= predictor.predict(test_data1.drop(columns=[label]))
 
-# Plot the predicted vs actual values
-plt.plot(y_pred, label="Predictions")
-plt.plot(test_data[label], label="True Values")
+y_pred2= predictor.predict(test_data2.drop(columns=[label]))
+
+#plots the predicted vs actual values of the top performing model using matplotlib
+plt.plot(y_pred1, label="Predictions")
+plt.plot(test_data1[label], label="True Values")
 plt.legend()
-plt.savefig("Pictures/predictions2.png")
+plt.savefig('Data/phil_socdata_test1.png')
 
-# Smooth the predicted values using a moving average of 600 values and plot them against the actual values
-y_pred_smooth = y_pred.rolling(600).mean()
-plt.plot(y_pred_smooth, label="Predictions")
-plt.plot(test_data[label], label="True Values")
+plt.plot(y_pred2, label="Predictions")
+plt.plot(test_data2[label], label="True Values")
 plt.legend()
-plt.savefig("Pictures/smoothed_predictions.png")
+plt.savefig('Data/phil_socdata_test2.png')
 
-# Calculate the RMSE for both the original and smoothed predictions
-mse_test = np.mean(((y_pred - test_data[label])**2))
+mse_test = np.mean(((y_pred1 - test_data1[label])**2))
 rmse_test = math.sqrt(mse_test)
-print("test data rmse", rmse_test)
+print("Test data 1 RMSE", rmse_test)
+mse_test = np.mean(((y_pred2 - test_data2[label])**2))
+rmse_test = math.sqrt(mse_test)
+print("Test data 2 RMSE", rmse_test)
 
-mse_test_smooth = np.mean(((y_pred_smooth - test_data[label])**2))
-rmse_test_smooth = math.sqrt(mse_test_smooth)
-print("test data rmse (smooth)", rmse_test_smooth)
 
-# Calculate the accuracy of the original and smoothed predictions
-accuracy = sum(abs(y_pred - test_data[label]) < 0.1) / len(y_pred)
-accuracy_smooth = sum(abs(y_pred_smooth - test_data[label]) < 0.1) / len(y_pred_smooth)
-
-print("accuracy", accuracy)
-print("accuracy_smooth", accuracy_smooth)

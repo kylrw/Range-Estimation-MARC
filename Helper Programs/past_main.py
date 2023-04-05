@@ -14,7 +14,7 @@ tf.random.set_seed(0)
 np.random.seed(0)
 
 # Loads matlab files data into a python dict
-mat_data = loadmat('TRAIN_LGHG2@n10degC_to_25degC_Norm_5Inputs.mat')
+mat_data = loadmat('zzTRAIN_LGHG2@n10degC_to_25degC_Norm_5Inputs.mat')
 
 #Test data set
 test_data = loadmat('04_TEST_LGHG2@25degC_Norm_(05_Inputs).mat')
