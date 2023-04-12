@@ -30,7 +30,7 @@ with open(filename, 'w', newline='') as csvfile:
     for excel_file in excel_files:
 
         # skip the excel file with name Phil_DC_93_10degC.xlsx as it will be used as test data
-        if excel_file == 'Phil_DC_93_10degC.xlsx' or excel_file == 'Phil_DC_27_16degC.xlsx':
+        if excel_file == 'Phil_DC_93_10degC.xlsx' or excel_file == 'Phil_DC_86_10degC.xlsx':
             continue
 
         # Read the excel file into a pandas dataframe
