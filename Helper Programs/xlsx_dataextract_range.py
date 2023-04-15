@@ -80,7 +80,7 @@ def main():
     # Create a new csv file to write to
     with open('Data/phil_rangedata_train.csv', 'w', newline='') as csvfile:
         writer = csv.writer(csvfile, delimiter=',')
-        writer.writerow(['Initial SOC', 'Final SOC', 'Altitude Difference', 'Average Speed', 'Final Accumulated Distance'])
+        writer.writerow(['initial_SOC', 'final_SOC', 'altitude', 'avg_speed', 'total_distance'])
 
         # Loop through all the excel files
         for excel_file in excel_files:
@@ -89,9 +89,9 @@ def main():
 
             previous_row = []
 
-            # Get the chunks of data for 10 mins, 30 mins, 60 mins, 90 mins, and 120 mins
-            for chunk_size in [600, 1800, 3600, 5400, 7200]:
-                overlap = int(chunk_size/2)
+            # Get the chunks of data for 10 mins, 30 mins, 60 mins, 90 mins, 120 mins, and 150 mins
+            for chunk_size in [600, 1800, 3600, 5400, 7200, 9000]:
+                overlap = int(chunk_size / 2)
 
                 if chunk_size > len(df):
                     continue
@@ -111,24 +111,17 @@ def main():
                         # Write the processed chunk to the csv file
                         writer.writerow(processed_chunk)
                         previous_row = processed_chunk
-            
-            '''
-            # gathers the data for the entire file
-            processed_chunk = process_chunk(df)
-            if not np.isnan(processed_chunk).any():
-                writer.writerow(processed_chunk)
-                #print status
-                print(excel_file, 'Done')
-            '''
+
                             
 if __name__ == '__main__':
     main()
 
-    
+    '''
     #randomly reformat the rows in the csv file
     df = pd.read_csv('Data/phil_rangedata_train.csv')
     df = df.sample(frac=1).reset_index(drop=True)
     df.to_csv('Data/phil_rangedata_train.csv', index=False)
+    '''
 
     print('Done')
     

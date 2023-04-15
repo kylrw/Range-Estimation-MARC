@@ -19,7 +19,7 @@ from scipy.io import loadmat
 # Get all the excel files in the current directory
 excel_files = [f for f in os.listdir('Data/philcar') if f.endswith('.xlsx')]
 
-filename = 'Data/phil_socdata_test1.csv'
+filename = 'Data/phil_socdata_train.csv'
 
 # Open the csv file and write the column names
 with open(filename, 'w', newline='') as csvfile:
@@ -30,7 +30,7 @@ with open(filename, 'w', newline='') as csvfile:
     for excel_file in excel_files:
 
         # skip the excel file with name Phil_DC_93_10degC.xlsx as it will be used as test data
-        if excel_file != 'Phil_DC_93_10degC.xlsx' or excel_file == 'Phil_DC_86_10degC.xlsx':
+        if excel_file == 'Phil_DC_93_10degC.xlsx' or excel_file == 'Phil_DC_86_10degC.xlsx':
             continue
 
         # Read the excel file into a pandas dataframe
@@ -57,6 +57,15 @@ with open(filename, 'w', newline='') as csvfile:
             if 'OAT [degC]' in df[sheet].columns:
                 t = df[sheet]['OAT [degC]']
 
+        # remove any rows where v is < 300 and shift the lists to the left
+        for x in range(len(v)):
+            if v[x] < 300:
+                soc.pop(x)
+                v.pop(x)
+                i.pop(x)
+                t.pop(x)
+
+
         if soc.empty or v.empty or i.empty or t.empty:
             print('Error: NaN value in file ' + excel_file)
             continue
@@ -65,7 +74,7 @@ with open(filename, 'w', newline='') as csvfile:
             print(str(excel_files.index(excel_file)) + ': Found all columns in file:' + excel_file)
 
             # iterate through the lists and write the data to the csv file, including the timestep of 1s using pandas 
-            for x in range(len(soc)):
+            for x in range(1,len(soc),1):
                 # double check that the data is not NaN
                 if soc[x] == soc[x] and v[x] == v[x] and i[x] == i[x] and t[x] == t[x]:
                     timestep = x
@@ -84,10 +93,5 @@ with open(filename, 'w', newline='') as csvfile:
 
                     #writes the data to the csv file
                     writer.writerow([soc[x], v[x], i[x], t[x], v[x]*i[x], v_avg_five[x], v_avg_one[x], i_avg[x]])
-
-# remove any rows where V < 300
-df = pd.read_csv(filename)
-df = df[df['V'] > 300]
-df.to_csv(filename, index=False)
 
 print('Done!')
