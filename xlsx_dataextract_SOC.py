@@ -19,18 +19,18 @@ from scipy.io import loadmat
 # Get all the excel files in the current directory
 excel_files = [f for f in os.listdir('Data/philcar') if f.endswith('.xlsx')]
 
-filename = 'Data/phil_socdata_train.csv'
+filename = 'Data/phil_socdata_test1.csv'
 
 # Open the csv file and write the column names
 with open(filename, 'w', newline='') as csvfile:
     writer = csv.writer(csvfile, delimiter=',')
-    writer.writerow(['SOC', 'V', 'I', 'T','P','V_avg','I_avg'])
+    writer.writerow(['SOC', 'V', 'I', 'T','P','V_avg_five','V_avg_one','I_avg'])
 
     # Loop through all the excel files
     for excel_file in excel_files:
 
         # skip the excel file with name Phil_DC_93_10degC.xlsx as it will be used as test data
-        if excel_file == 'Phil_DC_93_10degC.xlsx' or excel_file == 'Phil_DC_86_10degC.xlsx':
+        if excel_file != 'Phil_DC_93_10degC.xlsx' or excel_file == 'Phil_DC_86_10degC.xlsx':
             continue
 
         # Read the excel file into a pandas dataframe
@@ -41,7 +41,8 @@ with open(filename, 'w', newline='') as csvfile:
         v = []
         i = []
         t = []
-        v_avg = []
+        v_avg_five = []
+        v_avg_one = []
         i_avg = []
         p = []
 
@@ -72,13 +73,21 @@ with open(filename, 'w', newline='') as csvfile:
                     timestep = pd.to_datetime(timestep, unit='s')
                     #converts the timestamp into a string
                     timestep = timestep.strftime('%Y-%m-%d %H:%M:%S')
-                    # v_avg is the average voltage of the 500 previous values including the current value
-                    v_avg.append(sum(v[max(0, x-499):x+1])/min(500, x+1))
+                    # v_avg_five is the average voltage of the 500 previous values including the current value
+                    v_avg_five.append(sum(v[max(0, x-499):x+1])/min(500, x+1))
+
+                    # v_avg_one is the average voltage of the 100 previous values including the current value
+                    v_avg_one.append(sum(v[max(0, x-99):x+1])/min(100, x+1))
 
                     # i_avg is the average current of the 500 previous values including the current value
                     i_avg.append(sum(i[max(0, x-499):x+1])/min(500, x+1))
 
                     #writes the data to the csv file
-                    writer.writerow([soc[x], v[x], i[x], t[x], v[x]*i[x],v_avg[x], i_avg[x]])
+                    writer.writerow([soc[x], v[x], i[x], t[x], v[x]*i[x], v_avg_five[x], v_avg_one[x], i_avg[x]])
+
+# remove any rows where V < 300
+df = pd.read_csv(filename)
+df = df[df['V'] > 300]
+df.to_csv(filename, index=False)
 
 print('Done!')
