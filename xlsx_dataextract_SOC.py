@@ -57,15 +57,6 @@ with open(filename, 'w', newline='') as csvfile:
             if 'OAT [degC]' in df[sheet].columns:
                 t = df[sheet]['OAT [degC]']
 
-        # remove any rows where v is < 300 and shift the lists to the left
-        for x in range(len(v)):
-            if v[x] < 300:
-                soc.pop(x)
-                v.pop(x)
-                i.pop(x)
-                t.pop(x)
-
-
         if soc.empty or v.empty or i.empty or t.empty:
             print('Error: NaN value in file ' + excel_file)
             continue
@@ -74,14 +65,9 @@ with open(filename, 'w', newline='') as csvfile:
             print(str(excel_files.index(excel_file)) + ': Found all columns in file:' + excel_file)
 
             # iterate through the lists and write the data to the csv file, including the timestep of 1s using pandas 
-            for x in range(1,len(soc),1):
+            for x in range(len(soc)):
                 # double check that the data is not NaN
                 if soc[x] == soc[x] and v[x] == v[x] and i[x] == i[x] and t[x] == t[x]:
-                    timestep = x
-                    #converts timestep into a pandas timestamp
-                    timestep = pd.to_datetime(timestep, unit='s')
-                    #converts the timestamp into a string
-                    timestep = timestep.strftime('%Y-%m-%d %H:%M:%S')
                     # v_avg_five is the average voltage of the 500 previous values including the current value
                     v_avg_five.append(sum(v[max(0, x-499):x+1])/min(500, x+1))
 
@@ -93,5 +79,11 @@ with open(filename, 'w', newline='') as csvfile:
 
                     #writes the data to the csv file
                     writer.writerow([soc[x], v[x], i[x], t[x], v[x]*i[x], v_avg_five[x], v_avg_one[x], i_avg[x]])
+
+
+# remove any rows where v < 300
+df = pd.read_csv(filename)
+df = df[df['V'] > 300]
+df.to_csv(filename, index=False)
 
 print('Done!')
