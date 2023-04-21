@@ -107,7 +107,7 @@ def main():
                 print(f'Processing {excel_file} with chunk size {chunk_size} and overlap {overlap}')
 
                 # Loop through all the chunks
-                for i in range(1):
+                for i in range(len(chunks)):
                     # Process the chunk
                     processed_chunk = process_chunk(chunks[i])
 
