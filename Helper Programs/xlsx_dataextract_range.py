@@ -78,18 +78,23 @@ def main():
     excel_files = [f for f in os.listdir('Data/philcar') if f.endswith('.xlsx')]
 
     # Create a new csv file to write to
-    with open('Data/phil_rangedata_train.csv', 'w', newline='') as csvfile:
+    with open('Data/phil_rangedata_test2.csv', 'w', newline='') as csvfile:
         writer = csv.writer(csvfile, delimiter=',')
         writer.writerow(['initial_SOC', 'final_SOC', 'altitude', 'avg_speed', 'total_distance'])
 
         # Loop through all the excel files
         for excel_file in excel_files:
+
+            # skip the excel file with name Phil_DC_93_10degC.xlsx as it will be used as test data
+            if excel_file == 'Phil_DC_93_10degC.xlsx' or excel_file != 'Phil_DC_86_10degC.xlsx':
+                continue
+
             # Read the excel file into a pandas dataframe
             df = pd.read_excel('Data/philcar/' + excel_file, sheet_name=1)
 
             previous_row = []
 
-            # Get the chunks of data for 10 mins, 30 mins, 60 mins, 90 mins, 120 mins, and 150 mins
+            # Get the chunks of data for 10 mins, 30 mins, 60 mins, 90 mins, 120 mins, and 150 mins and the entire chunk
             for chunk_size in [600, 1800, 3600, 5400, 7200, 9000]:
                 overlap = int(chunk_size / 2)
 
@@ -111,6 +116,18 @@ def main():
                         # Write the processed chunk to the csv file
                         writer.writerow(processed_chunk)
                         previous_row = processed_chunk
+
+            # Gather the data for the entire file
+            processed_chunk = process_chunk(df)
+
+            # check if all the values in the chunk are not NaN and the final accumulated distance is not the same as the row above it in the csv file
+            if not np.isnan(processed_chunk).any() and processed_chunk != previous_row:
+                # Write the processed chunk to the csv file
+                writer.writerow(processed_chunk)
+                previous_row = processed_chunk
+
+                
+
 
                             
 if __name__ == '__main__':
