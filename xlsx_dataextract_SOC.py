@@ -67,11 +67,7 @@ with open(filename, 'w', newline='') as csvfile:
             for x in range(len(soc)):
                 # double check that the data is not NaN
                 if soc[x] == soc[x] and v[x] == v[x] and i[x] == i[x] and t[x] == t[x]:
-                    timestep = x
-                    #converts timestep into a pandas timestamp
-                    timestep = pd.to_datetime(timestep, unit='s')
-                    #converts the timestamp into a string
-                    timestep = timestep.strftime('%Y-%m-%d %H:%M:%S')
+
                     # v_avg is the average voltage of the 500 previous values including the current value
                     v_avg.append(sum(v[max(0, x-499):x+1])/min(500, x+1))
 
@@ -80,5 +76,10 @@ with open(filename, 'w', newline='') as csvfile:
 
                     #writes the data to the csv file
                     writer.writerow([soc[x], v[x], i[x], t[x], v[x]*i[x],v_avg[x], i_avg[x]])
+
+# remove any rows where V < 200
+df = pd.read_csv(filename)
+df = df[df.V > 300]
+df.to_csv(filename, index=False)
 
 print('Done!')
