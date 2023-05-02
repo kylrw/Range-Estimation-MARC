@@ -24,7 +24,7 @@ filename = 'Data/phil_socdata_train.csv'
 # Open the csv file and write the column names
 with open(filename, 'w', newline='') as csvfile:
     writer = csv.writer(csvfile, delimiter=',')
-    writer.writerow(['SOC', 'V', 'I', 'T','P','V_avg','I_avg'])
+    writer.writerow(['SOC', 'V', 'I', 'T','P','V_avg_five','V_avg_one','I_avg'])
 
     # Loop through all the excel files
     for excel_file in excel_files:
@@ -41,7 +41,8 @@ with open(filename, 'w', newline='') as csvfile:
         v = []
         i = []
         t = []
-        v_avg = []
+        v_avg_five = []
+        v_avg_one = []
         i_avg = []
         p = []
 
@@ -67,15 +68,29 @@ with open(filename, 'w', newline='') as csvfile:
             for x in range(len(soc)):
                 # double check that the data is not NaN
                 if soc[x] == soc[x] and v[x] == v[x] and i[x] == i[x] and t[x] == t[x]:
+<<<<<<< HEAD
 
                     # v_avg is the average voltage of the 500 previous values including the current value
                     v_avg.append(sum(v[max(0, x-499):x+1])/min(500, x+1))
+=======
+                    # v_avg_five is the average voltage of the 500 previous values including the current value
+                    v_avg_five.append(sum(v[max(0, x-499):x+1])/min(500, x+1))
+
+                    # v_avg_one is the average voltage of the 100 previous values including the current value
+                    v_avg_one.append(sum(v[max(0, x-99):x+1])/min(100, x+1))
+>>>>>>> 75eb1cba7ef0ba9763eb55573919065141b4d0c4
 
                     # i_avg is the average current of the 500 previous values including the current value
                     i_avg.append(sum(i[max(0, x-499):x+1])/min(500, x+1))
 
                     #writes the data to the csv file
-                    writer.writerow([soc[x], v[x], i[x], t[x], v[x]*i[x],v_avg[x], i_avg[x]])
+                    writer.writerow([soc[x], v[x], i[x], t[x], v[x]*i[x], v_avg_five[x], v_avg_one[x], i_avg[x]])
+
+
+# remove any rows where v < 300
+df = pd.read_csv(filename)
+df = df[df['V'] > 300]
+df.to_csv(filename, index=False)
 
 # remove any rows where V < 200
 df = pd.read_csv(filename)
