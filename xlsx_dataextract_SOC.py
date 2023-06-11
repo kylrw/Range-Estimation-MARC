@@ -68,11 +68,17 @@ with open(filename, 'w', newline='') as csvfile:
             for x in range(len(soc)):
                 # double check that the data is not NaN
                 if soc[x] == soc[x] and v[x] == v[x] and i[x] == i[x] and t[x] == t[x]:
+<<<<<<< HEAD
+
+                    # v_avg is the average voltage of the 500 previous values including the current value
+                    v_avg.append(sum(v[max(0, x-499):x+1])/min(500, x+1))
+=======
                     # v_avg_five is the average voltage of the 500 previous values including the current value
                     v_avg_five.append(sum(v[max(0, x-499):x+1])/min(500, x+1))
 
                     # v_avg_one is the average voltage of the 100 previous values including the current value
                     v_avg_one.append(sum(v[max(0, x-99):x+1])/min(100, x+1))
+>>>>>>> 75eb1cba7ef0ba9763eb55573919065141b4d0c4
 
                     # i_avg is the average current of the 500 previous values including the current value
                     i_avg.append(sum(i[max(0, x-499):x+1])/min(500, x+1))
@@ -84,6 +90,11 @@ with open(filename, 'w', newline='') as csvfile:
 # remove any rows where v < 300
 df = pd.read_csv(filename)
 df = df[df['V'] > 300]
+df.to_csv(filename, index=False)
+
+# remove any rows where V < 200
+df = pd.read_csv(filename)
+df = df[df.V > 300]
 df.to_csv(filename, index=False)
 
 print('Done!')
