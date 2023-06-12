@@ -44,7 +44,7 @@ with open(filename, 'w', newline='') as csvfile:
         v_avg_five = []
         v_avg_one = []
         i_avg = []
-        p = []
+         = []
 
         # gather the values from the dataframe if they are not NaN
         for sheet in df:
